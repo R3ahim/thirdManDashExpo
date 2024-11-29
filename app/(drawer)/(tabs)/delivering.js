@@ -18,6 +18,8 @@ import * as Notifications from 'expo-notifications';
 export default function Page({selectedDevice}) {
   const [visble,setVisible] = useState(false)
   const [selectedTime, setSelectedTime] = useState(null);
+  const [timeOptions, setTimeOptions] = useState([]);
+//   const [clicked, setClicked] = useState(false);
 
   const [orderser, setOrders] = useState([]);
 
@@ -25,8 +27,8 @@ export default function Page({selectedDevice}) {
 
   const fetchAllOrders = async () => {
       try {
-          const response = await axios.get(`${url}/api/order/today`);
-          if (response.data.success) {
+        const response = await axios.get(`${url}/api/order/today`);
+        if (response.data.success) {
               setOrders(response.data.data);
           } else {
               Alert.alert("Error", "Failed to fetch orders");
@@ -36,11 +38,16 @@ export default function Page({selectedDevice}) {
           Alert.alert("Error", "Failed to fetch orders");
       }
   };
-  const orderse = orderser.filter(order=>order.status ==='done')
+  const orderse = orderser.filter(order=>order.status ==='delivering')
+// const orderse = orderser.filter(order=>order.status === 'Deliverd')
+  
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchAllOrders();
+  }, 5000); // 5 seconds
 
-
-
-    
+  return () => clearInterval(interval); // Cleanup on component unmount
+}, []);
 
     // console.log(orderse)
   
@@ -59,19 +66,47 @@ export default function Page({selectedDevice}) {
       // console.log(datas)
     }
 
+    // useEffect(()=>{
+    //   const data = orderse?.filter(d =>d.status ===btnData);
+    //   setMainData(data)
+    //   console.log(mainData)
 
-      // Configure notification presentation
-  const hanldeModaleOff = id =>{
-    setVisible(false)
-  }
+    // },[btnData])
+    // ?notifcation
 
     useEffect(() => {
-      const interval = setInterval(() => {
-        fetchAllOrders();
-      }, 5000); // 5 seconds
-  
-      return () => clearInterval(interval); // Cleanup on component unmount
+      (async () => {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status !== 'granted') {
+          await Notifications.requestPermissionsAsync();
+        }
+      })();
     }, []);
+    const statusHandler = async(orderId) =>{
+     
+      const response1 = await axios.post(url+"/api/order/status",{
+        orderId,
+        status:"done"
+      })
+      if (response1.data.success) {
+           console.log('okey')        
+      }
+    }
+      // Configure notification presentation
+  
+    const hanldeModaleOff = async(id)=>{
+      const response = await axios.post(url+"/api/order/orStatus",{
+        orderId:id,
+        status:'true',
+      })
+      if (response.data.success) {
+        await fetchAllOrders();
+        
+      }   
+      statusHandler(id)
+      setVisible(false)
+    }
+    
     
     const getFilteredExtras = (itemsData) => {
       return itemsData?.items?.map((item) => {
@@ -251,7 +286,7 @@ export default function Page({selectedDevice}) {
       {/* modal end */}
  <View style={styles.modalBtnControle}>
  <TouchableOpacity style={styles.modalBtn}  onPress={()=>hanldeModaleOff(SelectedIdData._id,SelectedIdData.address.email,selectedTime,SelectedIdData.address?.firstName)}>
-      <Text style={{color:'white',fontSize:20}}>Ok</Text>
+      <Text style={{color:'white',fontSize:20}}>accept</Text>
     </TouchableOpacity>
  </View>
     </View>

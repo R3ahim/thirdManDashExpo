@@ -1,91 +1,118 @@
-import React, { useEffect, useState } from 'react'
-import { View, Text, FlatList, Image,  Button, Alert, StyleSheet } from 'react-native';
-import axios from 'axios';
-const url = 'https://reserver-vu5s.onrender.com'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  FlatList,
+  StyleSheet,
+} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import upload from './upload.png';
+import dropdown from './dropdown.png';
+
+
 
 export default function Page() {
-  const [orders, setOrders] = useState([]);
+  const [clicked, setClicked] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [timeOptions, setTimeOptions] = useState([]);
 
-  const fetchAllOrders = async () => {
-    try {
-      const response = await axios.get(`${url}/api/order/list`);
-      if (response.data.success) {
-        setOrders(response.data.data);
-      } else {
-        Alert.alert("Error", "Failed to fetch orders");
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Failed to fetch orders");
-    }
-  };
 
-  const statusHandler = async (status, orderId) => {
-    try {
-      const response = await axios.post(`${url}/api/order/status`, {
-        orderId,
-        status,
-      });
-      if (response.data.success) {
-        fetchAllOrders();
-      } else {
-        Alert.alert("Error", "Failed to update status");
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Failed to update status");
-    }
-  };
+
+  
 
   useEffect(() => {
-    fetchAllOrders();
+    const currentTime = new Date();
+    const options = [
+      { label: '30 Minutes', value: addMinutes(currentTime, 30) },
+      { label: '40 Minutes', value: addMinutes(currentTime, 40) },
+      { label: '60 Minutes', value: addMinutes(currentTime, 60) },
+    ];
+    setTimeOptions(options);
   }, []);
 
+  const addMinutes = (date, minutes) => {
+    const result = new Date(date);
+    result.setMinutes(result.getMinutes() + minutes);
+    return result.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
   return (
-    <View style={styles.container}>
-    <Text style={styles.heading}>Order Page</Text>
-    <FlatList
-      data={orders}
-      keyExtractor={(item, index) => index.toString()}
-      renderItem={({ item: order }) => (
-        <View style={styles.orderItem}>
-     <Text>ThisIcon</Text>
-          <View style={styles.orderDetails}>
-            <Text style={styles.orderItemFood}>
-              {order.items.map((item, index) => {
-                const isLastItem = index === order.items.length - 1;
-                return item.name + " x " + item.quantity + (isLastItem ? "" : ", ");
-              })}
-            </Text>
-            <Text style={styles.orderItemName}>
-              {order.address.firstName + " " + order.address.lastName}
-            </Text>
-            <View style={styles.orderItemAddress}>
-              <Text>{order.date}</Text>
-              <Text>{order.address.method}</Text>
-              <Text>{order.address.address + ","}</Text>
-              <Text>
-                {order.address.city + ", " + order.address.state + ", " + order.address.country + ", " + order.address.postCode}
-              </Text>
-            </View>
-            <Text style={styles.orderItemPhone}>{order.address.phone}</Text>
-            <Text>
-              Status: {order.payment ? <Text style={{ color: "green" }}> Paid</Text> : <Text style={{ color: "red" }}>Not Paid</Text>}
-            </Text>
-          </View>
-          <Text>Items: {order.items.length}</Text>
-          <Text>PLN {order.amount}</Text>
-          {/* <Picker
-            selectedValue={order.status}
-            style={styles.picker}
-            onValueChange={(value) => statusHandler(value, order._id)}
-          >
-          </Picker> */}
-          <Button title="Delete" onPress={() => Alert.alert("Delete", "Delete function here")} />
+    <View style={{flex: 1}}>
+      <TouchableOpacity
+        style={{
+          width: '90%',
+          height: 50,
+          borderRadius: 10,
+          borderWidth: 0.5,
+          alignSelf: 'center',
+          marginTop: 100,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingLeft: 15,
+          paddingRight: 15,
+        }}
+        onPress={() => {
+          setClicked(!clicked);
+        }}>
+        <Text style={{fontWeight:'600'}}>
+          {selectedTime == '' ? 'Select Time' : selectedTime}
+        </Text>
+        {clicked ? (
+          <Image
+            source={dropdown}
+            style={{width: 20, height: 20}}
+          />
+        ) : (
+          <Image
+            source={upload}
+            style={{width: 20, height: 20}}
+          />
+        )}
+      </TouchableOpacity>
+      {clicked ? (
+        <View
+          style={{
+            elevation: 5,
+            marginTop: 20,
+            height: 300,
+            alignSelf: 'center',
+            width: '90%',
+            backgroundColor: '#fff',
+            borderRadius: 10,
+          }}>
+         
+         
+        
+
+          <FlatList
+            data={timeOptions}
+            renderItem={({item, index}) => {
+              return (
+                <TouchableOpacity
+                  style={{
+                    width: '85%',
+                    alignSelf: 'center',
+                    height: 50,
+                    justifyContent: 'center',
+                    borderBottomWidth: 0.5,
+                    borderColor: '#8e8e8e',
+                  }}
+                  onPress={() => {
+                    setSelectedTime(item.value);
+                    setClicked(!clicked);
+                  
+                    
+                  }}>
+                  <Text style={{fontWeight: '600'}}>{item.value}</Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
         </View>
-      )}
-    />
-  </View>
+      ) : null}
+    </View>
 );
 };
 

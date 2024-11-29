@@ -4,10 +4,18 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { TouchableOpacity } from 'react-native';
 import ReactNativeModal from 'react-native-modal';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 
+import * as Print from 'expo-print';
+
+import { Picker } from '@react-native-picker/picker';
+
+import upload from './upload.png';
+import dropdown from './dropdown.png';
 
 
 const url = 'https://server.deltakebab.com'
+const socket = io(url);
 
 // example of notifacation
 import * as Notifications from 'expo-notifications';
@@ -18,6 +26,8 @@ import * as Notifications from 'expo-notifications';
 export default function Page({selectedDevice}) {
   const [visble,setVisible] = useState(false)
   const [selectedTime, setSelectedTime] = useState(null);
+  const [timeOptions, setTimeOptions] = useState([]);
+//   const [clicked, setClicked] = useState(false);
 
   const [orderser, setOrders] = useState([]);
 
@@ -36,11 +46,31 @@ export default function Page({selectedDevice}) {
           Alert.alert("Error", "Failed to fetch orders");
       }
   };
-  const orderse = orderser.filter(order=>order.status ==='done')
+  const orderse = orderser.filter(order=>order.status ==='preparing')
+// const orderse = orderser.filter(order=>order.status === 'Deliverd')
+  const showNotification = (title, body) => {
+      Notifications.scheduleNotificationAsync({
+          content: { title, body },
+          trigger: null,
+      });
+  };
 
+  useEffect(() => {
+      fetchAllOrders();
 
+      // Listen for new orders in real-time
+      socket.on("newOrder", (orderse) => {
+          fetchAllOrders();  // Refresh orders
+          showNotification("New Order!", `Order ID: ${orderse._id} has been placed.`);
+      });
 
+      return () => {
+          socket.off("newOrder");
+      };
+  }, []);
+  
     
+
 
     // console.log(orderse)
   
@@ -59,11 +89,46 @@ export default function Page({selectedDevice}) {
       // console.log(datas)
     }
 
+    // useEffect(()=>{
+    //   const data = orderse?.filter(d =>d.status ===btnData);
+    //   setMainData(data)
+    //   console.log(mainData)
 
+    // },[btnData])
+    // ?notifcation
+
+    useEffect(() => {
+      (async () => {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status !== 'granted') {
+          await Notifications.requestPermissionsAsync();
+        }
+      })();
+    }, []);
+    const statusHandler = async(orderId) =>{
+     
+      const response1 = await axios.post(url+"/api/order/status",{
+        orderId,
+        status:"delivering"
+      })
+      if (response1.data.success) {
+           console.log('okey')        
+      }
+    }
       // Configure notification presentation
-  const hanldeModaleOff = id =>{
-    setVisible(false)
-  }
+  
+    const hanldeModaleOff = async(id)=>{
+      const response = await axios.post(url+"/api/order/orStatus",{
+        orderId:id,
+        status:'true',
+      })
+      if (response.data.success) {
+        await fetchAllOrders();
+        
+      }   
+      statusHandler(id)
+      setVisible(false)
+    }
 
     useEffect(() => {
       const interval = setInterval(() => {
@@ -72,6 +137,7 @@ export default function Page({selectedDevice}) {
   
       return () => clearInterval(interval); // Cleanup on component unmount
     }, []);
+    
     
     const getFilteredExtras = (itemsData) => {
       return itemsData?.items?.map((item) => {
@@ -240,7 +306,75 @@ export default function Page({selectedDevice}) {
 
       )}}/>
           
-  
+    {/* <View >
+      <TouchableOpacity
+        style={{
+          width: '90%',
+          height: 50,
+          borderRadius: 10,
+          borderWidth: 0.5,
+          alignSelf: 'center',
+          marginTop: 10,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingLeft: 15,
+          paddingRight: 15,
+        }}
+        onPress={() => {
+          setClicked(!clicked);
+        }}>
+        <Text style={{fontWeight:'600'}}>
+          {selectedTime == '' ? 'Select Time' : selectedTime}
+        </Text>
+        {clicked ? (
+        <Text>up</Text>
+        ) : (
+         <Text>Down</Text>
+        )}
+      </TouchableOpacity>
+      {clicked ? (
+        <View
+          style={{
+            elevation: 5,
+            marginTop: 4,
+            height: 150,
+            alignSelf: 'center',
+            width: '90%',
+            backgroundColor: '#fff',
+            borderRadius: 10,
+          }}>
+         
+         
+        
+
+          <FlatList
+            data={timeOptions}
+            renderItem={({item, index}) => {
+              return (
+                <TouchableOpacity
+                  style={{
+                    width: '85%',
+                    alignSelf: 'center',
+                    height: 50,
+                    justifyContent: 'center',
+                    borderBottomWidth: 0.5,
+                    borderColor: '#8e8e8e',
+                  }}
+                  onPress={() => {
+                    setSelectedTime(item.value);
+                    setClicked(!clicked);
+                  
+                    
+                  }}>
+                  <Text style={{fontWeight: '600'}}>{item.value}</Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </View>
+      ) : null}
+    </View> */}
      </View>
 )}}/>
        </View>
@@ -251,7 +385,7 @@ export default function Page({selectedDevice}) {
       {/* modal end */}
  <View style={styles.modalBtnControle}>
  <TouchableOpacity style={styles.modalBtn}  onPress={()=>hanldeModaleOff(SelectedIdData._id,SelectedIdData.address.email,selectedTime,SelectedIdData.address?.firstName)}>
-      <Text style={{color:'white',fontSize:20}}>Ok</Text>
+      <Text style={{color:'white',fontSize:20}}>accept</Text>
     </TouchableOpacity>
  </View>
     </View>

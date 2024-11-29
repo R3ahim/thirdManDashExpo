@@ -51,61 +51,10 @@ const CustomDrawerContent = (props) => {
           router.push("/(drawer)/(tabs)/feed");
         }}
       />
-      <DrawerItem
-        icon={({ color, size }) => (
-          <AntDesign
-            name="user"
-            size={size}
-            color={pathname == "/profile" ? "#fff" : "#000"}
-          />
-        )}
-        label={"Profile"}
-        labelStyle={[
-          styles.navItemLabel,
-          { color: pathname == "/profile" ? "#fff" : "#000" },
-        ]}
-        style={{ backgroundColor: pathname == "/profile" ? "#333" : "#fff" }}
-        onPress={() => {
-          router.push("/(drawer)/(tabs)/profile");
-        }}
-      />
-      <DrawerItem
-        icon={({ color, size }) => (
-          <MaterialIcons
-            name="favorite-outline"
-            size={size}
-            color={pathname == "/favourites" ? "#fff" : "#000"}
-          />
-        )}
-        label={"Favourites"}
-        labelStyle={[
-          styles.navItemLabel,
-          { color: pathname == "/favourites" ? "#fff" : "#000" },
-        ]}
-        style={{ backgroundColor: pathname == "/favourites" ? "#333" : "#fff" }}
-        onPress={() => {
-          router.push("/favourites");
-        }}
-      />
-      <DrawerItem
-        icon={({ color, size }) => (
-          <Ionicons
-            name="settings-outline"
-            size={size}
-            color={pathname == "/settings" ? "#fff" : "#000"}
-          />
-        )}
-        label={"Settings"}
-        labelStyle={[
-          styles.navItemLabel,
-          { color: pathname == "/settings" ? "#fff" : "#000" },
-        ]}
-        style={{ backgroundColor: pathname == "/settings" ? "#333" : "#fff" }}
-        onPress={() => {
-          router.push("/settings");
-        }}
-      />
-      <DrawerItem
+   
+     
+   
+      {/* <DrawerItem
         icon={({ color, size }) => (
           <Ionicons
             name="order-outline"
@@ -122,7 +71,44 @@ const CustomDrawerContent = (props) => {
         onPress={() => {
           router.push("/order");
         }}
+      /> */}
+         <DrawerItem
+        icon={({ color, size }) => (
+          <MaterialIcons
+            name="favorite-outline"
+            size={size}
+            color={pathname == "/history" ? "#fff" : "#000"}
+          />
+        )}
+        label={"History"}
+        labelStyle={[
+          styles.navItemLabel,
+          { color: pathname == "/history" ? "#fff" : "#000" },
+        ]}
+        style={{ backgroundColor: pathname == "/history" ? "#333" : "#fff" }}
+        onPress={() => {
+          router.push("/history");
+        }}
       />
+         {/* <DrawerItem
+        icon={({ color, size }) => (
+          <Ionicons
+            name="settings-outline"
+            size={size}
+            color={pathname == "/settings" ? "#fff" : "#000"}
+          />
+        )}
+        label={"Settings"}
+        labelStyle={[
+          styles.navItemLabel,
+          { color: pathname == "/settings" ? "#fff" : "#000" },
+        ]}
+        style={{ backgroundColor: pathname == "/settings" ? "#333" : "#fff" }}
+        onPress={() => {
+          router.push("/settings");
+        }}
+      /> */}
+   
     </DrawerContentScrollView>
   );
 };
@@ -132,9 +118,9 @@ export default function Layout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
 
     <Drawer drawerContent={(props) => <CustomDrawerContent {...props} />} screenOptions={{headerShown: false}}>
-      <Drawer.Screen name="favourites" options={{headerShown: true}} />
-      <Drawer.Screen name="settings" options={{headerShown: true}} />
       <Drawer.Screen name="order" options={{headerShown: true}} />
+      <Drawer.Screen name="history" options={{headerShown: true}} />
+      <Drawer.Screen name="settings" options={{headerShown: true}} />
     </Drawer>
     </GestureHandlerRootView>
   );
